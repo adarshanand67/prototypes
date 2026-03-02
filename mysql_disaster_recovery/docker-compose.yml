@@ -1,0 +1,48 @@
+services:
+  mysql-master:
+    image: mysql:8.0
+    container_name: mysql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdb
+    ports:
+      - "3306:3306"
+    volumes:
+      - master-data:/var/lib/mysql
+      - ./init-master.sql:/docker-entrypoint-initdb.d/init-master.sql
+    command: >
+      --server-id=1 
+      --log-bin=mysql-bin 
+      --binlog-format=ROW 
+      --enforce-gtid-consistency=ON 
+      --gtid-mode=ON
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mysql-replica:
+    image: mysql:8.0
+    container_name: mysql-replica
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - replica-data:/var/lib/mysql
+      - ./init-replica.sh:/docker-entrypoint-initdb.d/init-replica.sh
+    command: >
+      --server-id=2 
+      --log-bin=mysql-bin 
+      --binlog-format=ROW 
+      --enforce-gtid-consistency=ON 
+      --gtid-mode=ON 
+      --read-only=1
+    depends_on:
+      mysql-master:
+        condition: service_healthy
+
+volumes:
+  master-data:
+  replica-data:
