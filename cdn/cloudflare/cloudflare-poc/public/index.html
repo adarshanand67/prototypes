@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Cloudflare Edge PoC</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+		rel="stylesheet" />
+	<style>
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		:root {
+			--bg: #0a0a0f;
+			--surface: #111118;
+			--surface2: #1a1a28;
+			--border: rgba(255, 255, 255, 0.08);
+			--orange: #f6821f;
+			--orange-glow: rgba(246, 130, 31, 0.16);
+			--purple: #a78bfa;
+			--text: #e5e7eb;
+			--muted: #6b7280;
+			--green: #34d399;
+			--blue: #60a5fa;
+			--red: #f87171;
+		}
+
+		body {
+			font-family: 'Inter', sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			min-height: 100vh;
+			padding: 32px 20px;
+		}
+
+		.hero {
+			text-align: center;
+			margin-bottom: 48px;
+		}
+
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			background: var(--orange-glow);
+			border: 1px solid rgba(246, 130, 31, 0.3);
+			border-radius: 999px;
+			padding: 6px 16px;
+			font-size: 12px;
+			font-weight: 600;
+			color: var(--orange);
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			margin-bottom: 20px;
+		}
+
+		.badge-dot {
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--orange);
+			animation: pulse 1.5s ease-in-out infinite;
+		}
+
+		@keyframes pulse {
+
+			0%,
+			100% {
+				opacity: 1;
+			}
+
+			50% {
+				opacity: 0.3;
+			}
+		}
+
+		h1 {
+			font-size: clamp(28px, 5vw, 48px);
+			font-weight: 700;
+			background: linear-gradient(135deg, #fff 0%, var(--orange) 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			line-height: 1.2;
+			margin-bottom: 12px;
+		}
+
+		.subtitle {
+			color: var(--muted);
+			font-size: 15px;
+			font-weight: 400;
+			max-width: 500px;
+			margin: 0 auto;
+			line-height: 1.6;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+			gap: 16px;
+			max-width: 1100px;
+			margin: 0 auto 24px auto;
+		}
+
+		.card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			padding: 24px;
+			position: relative;
+			overflow: hidden;
+			transition: border-color 0.2s, transform 0.2s;
+		}
+
+		.card:hover {
+			border-color: rgba(246, 130, 31, 0.25);
+			transform: translateY(-2px);
+		}
+
+		.card::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 1px;
+			background: linear-gradient(90deg, transparent, rgba(246, 130, 31, 0.4), transparent);
+		}
+
+		.card-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 16px;
+		}
+
+		.card-icon {
+			font-size: 20px;
+		}
+
+		.card-title {
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--muted);
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
+
+		.stat-value {
+			font-size: 28px;
+			font-weight: 700;
+			color: #fff;
+			font-family: 'JetBrains Mono', monospace;
+			margin-bottom: 4px;
+		}
+
+		.stat-label {
+			font-size: 12px;
+			color: var(--muted);
+		}
+
+		.pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			background: rgba(52, 211, 153, 0.1);
+			border: 1px solid rgba(52, 211, 153, 0.2);
+			color: var(--green);
+			border-radius: 999px;
+			padding: 4px 12px;
+			font-size: 12px;
+			font-weight: 600;
+		}
+
+		.pill.purple {
+			background: rgba(167, 139, 250, 0.1);
+			border-color: rgba(167, 139, 250, 0.2);
+			color: var(--purple);
+		}
+
+		.pill.blue {
+			background: rgba(96, 165, 250, 0.1);
+			border-color: rgba(96, 165, 250, 0.2);
+			color: var(--blue);
+		}
+
+		.actions {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			max-width: 1100px;
+			margin: 0 auto;
+		}
+
+		.action-row {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			background: var(--surface2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			padding: 10px 18px;
+			font-family: 'Inter', sans-serif;
+			font-size: 13px;
+			font-weight: 500;
+			color: var(--text);
+			cursor: pointer;
+			transition: all 0.2s;
+			white-space: nowrap;
+		}
+
+		.btn:hover {
+			background: var(--orange-glow);
+			border-color: rgba(246, 130, 31, 0.4);
+			color: var(--orange);
+		}
+
+		.btn-primary {
+			background: var(--orange);
+			border-color: var(--orange);
+			color: #000;
+			font-weight: 600;
+		}
+
+		.btn-primary:hover {
+			background: #ff9a3c;
+			border-color: #ff9a3c;
+			color: #000;
+		}
+
+		.result-panel {
+			max-width: 1100px;
+			margin: 24px auto 0 auto;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			overflow: hidden;
+			display: none;
+		}
+
+		.result-panel.visible {
+			display: block;
+		}
+
+		.result-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 14px 20px;
+			background: var(--surface2);
+			border-bottom: 1px solid var(--border);
+			font-size: 12px;
+			font-weight: 600;
+			color: var(--muted);
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
+
+		.result-body {
+			padding: 20px;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 13px;
+			line-height: 1.7;
+			white-space: pre-wrap;
+			color: var(--green);
+			min-height: 80px;
+		}
+
+		.loader {
+			display: inline-block;
+			width: 14px;
+			height: 14px;
+			border: 2px solid var(--border);
+			border-top-color: var(--orange);
+			border-radius: 50%;
+			animation: spin 0.7s linear infinite;
+		}
+
+		@keyframes spin {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+
+		.footer {
+			text-align: center;
+			margin-top: 48px;
+			font-size: 12px;
+			color: var(--muted);
+		}
+
+		.status-dot {
+			display: inline-block;
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--green);
+			animation: pulse 1.5s ease-in-out infinite;
+			margin-right: 6px;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="hero">
+		<div class="badge"><span class="badge-dot"></span> Edge Network Active</div>
+		<h1>Cloudflare Worker PoC</h1>
+		<p class="subtitle">A local simulation of Cloudflare's global Edge network. Requests are intercepted and
+			processed at the edge before reaching origin.</p>
+	</div>
+
+	<div class="grid">
+		<div class="card">
+			<div class="card-header">
+				<span class="card-icon">🌍</span>
+				<span class="card-title">Visitor Country</span>
+			</div>
+			<div class="stat-value" id="country">—</div>
+			<div class="stat-label">Detected via <code>cf-ipcountry</code> header</div>
+		</div>
+		<div class="card">
+			<div class="card-header">
+				<span class="card-icon">🧪</span>
+				<span class="card-title">A/B Experiment Group</span>
+			</div>
+			<div id="group-pill" class="pill purple" style="font-size:18px; padding: 8px 16px; margin-bottom:6px;">—
+			</div>
+			<div class="stat-label">Deterministic split based on Edge identifier</div>
+		</div>
+		<div class="card">
+			<div class="card-header">
+				<span class="card-icon">⚡</span>
+				<span class="card-title">Edge Status</span>
+			</div>
+			<div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+				<span class="pill">Running</span>
+				<span class="pill blue">localhost:8787</span>
+			</div>
+			<div class="stat-label">Wrangler local dev server simulating edge</div>
+		</div>
+	</div>
+
+	<div class="actions">
+		<div class="action-row">
+			<button class="btn btn-primary" onclick="fetchInfo()">⚡ Fetch Edge Info</button>
+			<button class="btn" onclick="fetchExperiment()">🧪 Run A/B Experiment</button>
+			<button class="btn" onclick="fetchRandom()">🎲 Generate Random UUID</button>
+			<button class="btn" onclick="fetchMessage()">💬 Get Message</button>
+		</div>
+	</div>
+
+	<div class="result-panel" id="result-panel">
+		<div class="result-header">
+			<span id="result-label">Response</span>
+			<span id="result-status" class="pill">—</span>
+		</div>
+		<div class="result-body" id="result-body">Awaiting request...</div>
+	</div>
+
+	<div class="footer">
+		<span class="status-dot"></span>
+		Cloudflare Workers — <a href="https://developers.cloudflare.com/workers/" target="_blank"
+			style="color: var(--orange); text-decoration:none;">docs.cloudflare.com</a>
+	</div>
+
+	<script>
+		async function callEdge(path, label) {
+			const panel = document.getElementById('result-panel');
+			const body = document.getElementById('result-body');
+			const status = document.getElementById('result-status');
+			const lbl = document.getElementById('result-label');
+
+			panel.classList.add('visible');
+			lbl.textContent = `GET ${path}`;
+			body.innerHTML = '<span class="loader"></span>';
+			status.textContent = 'Fetching...';
+			status.className = 'pill';
+
+			try {
+				const t0 = performance.now();
+				const res = await fetch(path);
+				const ms = Math.round(performance.now() - t0);
+				const text = await res.text();
+				let display = text;
+				try { display = JSON.stringify(JSON.parse(text), null, 2); } catch (_) { }
+				body.textContent = display;
+				status.textContent = `${res.status} · ${ms}ms`;
+				status.className = res.ok ? 'pill' : 'pill blue';
+			} catch (e) {
+				body.textContent = `Error: ${e.message}`;
+				status.textContent = 'Error';
+				status.className = 'pill purple';
+			}
+		}
+
+		async function fetchInfo() {
+			await callEdge('/api/info', 'Edge Info API');
+			try {
+				const res = await fetch('/api/info');
+				const d = await res.json();
+				document.getElementById('country').textContent = d.visitor.country;
+			} catch (_) { }
+		}
+
+		async function fetchExperiment() {
+			await callEdge('/experiment', 'A/B Experiment');
+			try {
+				const res = await fetch('/experiment');
+				const txt = await res.text();
+				const pill = document.getElementById('group-pill');
+				const grp = txt.includes('Group-A') ? 'Group A' : 'Group B';
+				pill.textContent = grp;
+				pill.className = grp === 'Group A' ? 'pill' : 'pill purple';
+			} catch (_) { }
+		}
+
+		async function fetchRandom() { await callEdge('/random', 'Random UUID'); }
+		async function fetchMessage() { await callEdge('/message', 'Edge Message'); }
+
+		// Auto-load edge info on mount
+		fetchInfo();
+	</script>
+</body>
+
+</html>
