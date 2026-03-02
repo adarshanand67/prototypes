@@ -14,6 +14,12 @@ A local simulation of Cloudflare's global edge network, demonstrating real-world
 
 ---
 
+## 🏗️ Global Edge Architecture
+
+![Cloudflare Worker Architecture](/Users/adarsh_anand/.gemini/antigravity/brain/f8425b5e-dd7a-47a3-a44a-818d6fc30623/cloudflare_worker_architecture_1772470990308.png)
+
+---
+
 ## 🚀 Running Locally
 
 ```bash
