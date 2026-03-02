@@ -1,0 +1,29 @@
+erDiagram
+    users {
+        int id PK
+        varchar username UK
+        varchar email UK
+        timestamp created_at
+    }
+    posts {
+        int id PK
+        int user_id FK
+        text content
+        timestamp created_at
+    }
+    photos {
+        int id PK
+        int post_id FK
+        varchar image_url
+        timestamp uploaded_at
+    }
+    following {
+        int follower_id PK,FK
+        int followee_id PK,FK
+        timestamp created_at
+    }
+
+    users ||--o{ posts : "creates"
+    posts ||--o{ photos : "has"
+    users ||--o{ following : "follows (follower_id)"
+    users ||--o{ following : "followed by (followee_id)"
