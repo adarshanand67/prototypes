@@ -1,0 +1,10 @@
+# Build artifacts
+build/
+*.o
+*.out
+
+# Project specific
+bloom_filter_demo
+
+# macOS
+.DS_Store
