@@ -1,0 +1,29 @@
+{
+  "name": "design-rate-limiter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:performance": "node tests/performance.js",
+    "seed": "node database/seed.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@faker-js/faker": "^10.3.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "ioredis": "^5.10.0",
+    "redis": "^5.11.0"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^4.1.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.0"
+  }
+}
