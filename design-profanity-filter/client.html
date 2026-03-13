@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Profanity Filter - Test Client</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 1200px;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .chat-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #dee2e6;
+    }
+
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #fafbfc;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.sanitized {
+      border-left: 4px solid #ffc107;
+      background: #fff9e6;
+    }
+
+    .message.blocked {
+      border-left: 4px solid #dc3545;
+      background: #ffe6e6;
+    }
+
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .username {
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .timestamp {
+      font-size: 11px;
+      color: #6c757d;
+    }
+
+    .message-text {
+      color: #212529;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 8px;
+      text-transform: uppercase;
+    }
+
+    .badge.warn { background: #fff3cd; color: #856404; }
+    .badge.sanitize { background: #ffc107; color: #fff; }
+    .badge.block { background: #dc3545; color: #fff; }
+
+    .input-section {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    button {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .sidebar {
+      flex: 1;
+      background: #f8f9fa;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #495057;
+    }
+
+    .test-cases {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .test-case {
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .test-case:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .typing {
+      font-size: 12px;
+      color: #6c757d;
+      font-style: italic;
+      padding: 0 20px;
+      height: 20px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #28a745;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Real-Time Profanity Filter</h1>
+      <p>Advanced content moderation with Socket.IO</p>
+      <div class="status">
+        <div class="status-dot"></div>
+        <span id="connectionStatus">Connecting...</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="totalMessages">0</div>
+        <div class="stat-label">Total Messages</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="cleanMessages">0</div>
+        <div class="stat-label">Clean</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="sanitizedMessages">0</div>
+        <div class="stat-label">Sanitized</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="blockedMessages">0</div>
+        <div class="stat-label">Blocked</div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="chat-section">
+        <div class="messages" id="messages"></div>
+        <div class="typing" id="typing"></div>
+        <div class="input-section">
+          <div class="input-group">
+            <input type="text" id="username" placeholder="Your name" value="User">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <h3>Test Cases</h3>
+        <div class="test-cases">
+          <div class="test-case" onclick="testMessage('Hello, this is a clean message!')">Clean message</div>
+          <div class="test-case" onclick="testMessage('This is sh*t')">Obfuscated profanity</div>
+          <div class="test-case" onclick="testMessage('What the f u c k')">Spaced profanity</div>
+          <div class="test-case" onclick="testMessage('You are such an a$$hole')">Leetspeak</div>
+          <div class="test-case" onclick="testMessage('Go to h3ll you b1tch')">Multiple leetspeak</div>
+          <div class="test-case" onclick="testMessage('F*ck this sh!t')">Symbol replacement</div>
+          <div class="test-case" onclick="testMessage('This is аss (Cyrillic а)')">Unicode trick</div>
+          <div class="test-case" onclick="testMessage('shiiiiiit')">Repeated characters</div>
+          <div class="test-case" onclick="testMessage('fckfckfck')">Repeated profanity</div>
+          <div class="test-case" onclick="testMessage('you are an idiot')">Mild insult</div>
+          <div class="test-case" onclick="testMessage('классная работа (class in Russian)')">False positive test</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let username = 'User';
+
+    // Connection events
+    socket.on('connect', () => {
+      document.getElementById('connectionStatus').textContent = 'Connected';
+      console.log('Connected to server');
+    });
+
+    socket.on('disconnect', () => {
+      document.getElementById('connectionStatus').textContent = 'Disconnected';
+      console.log('Disconnected from server');
+    });
+
+    // Stats update
+    socket.on('stats', (stats) => {
+      document.getElementById('totalMessages').textContent = stats.totalMessages;
+      document.getElementById('cleanMessages').textContent = stats.cleanMessages;
+      document.getElementById('sanitizedMessages').textContent = stats.sanitizedMessages;
+      document.getElementById('blockedMessages').textContent = stats.blockedMessages;
+    });
+
+    // Receive messages
+    socket.on('message', (data) => {
+      addMessage(data, false);
+    });
+
+    // Message blocked
+    socket.on('messageBlocked', (data) => {
+      addMessage({
+        username: 'SYSTEM',
+        message: `Your message was blocked: "${data.original}"`,
+        timestamp: new Date().toISOString(),
+        blocked: true
+      }, true);
+    });
+
+    // Typing indicator
+    socket.on('typing', (data) => {
+      document.getElementById('typing').textContent = `${data.username} is typing...`;
+      setTimeout(() => {
+        document.getElementById('typing').textContent = '';
+      }, 2000);
+    });
+
+    // Send message
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const usernameInput = document.getElementById('username');
+      const message = messageInput.value.trim();
+      username = usernameInput.value.trim() || 'User';
+
+      if (message) {
+        socket.emit('message', { username, message });
+        messageInput.value = '';
+      }
+    }
+
+    // Enter key to send
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    // Typing indicator
+    let typingTimeout;
+    document.getElementById('messageInput').addEventListener('input', () => {
+      clearTimeout(typingTimeout);
+      socket.emit('typing', { username });
+      typingTimeout = setTimeout(() => {
+        // Stop typing
+      }, 1000);
+    });
+
+    // Add message to UI
+    function addMessage(data, isBlocked) {
+      const messagesDiv = document.getElementById('messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message';
+
+      if (isBlocked) {
+        messageDiv.classList.add('blocked');
+      } else if (data.sanitized) {
+        messageDiv.classList.add('sanitized');
+      }
+
+      const timestamp = new Date(data.timestamp).toLocaleTimeString();
+
+      messageDiv.innerHTML = `
+        <div class="message-header">
+          <span class="username">${data.username}</span>
+          <span class="timestamp">${timestamp}</span>
+        </div>
+        <div class="message-text">
+          ${data.message}
+          ${data.sanitized ? '<span class="badge sanitize">sanitized</span>' : ''}
+          ${isBlocked ? '<span class="badge block">blocked</span>' : ''}
+        </div>
+      `;
+
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Test case helper
+    function testMessage(message) {
+      document.getElementById('messageInput').value = message;
+      document.getElementById('messageInput').focus();
+    }
+  </script>
+</body>
+</html>
