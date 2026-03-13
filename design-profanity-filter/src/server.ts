@@ -4,12 +4,18 @@
  * Socket.IO server that filters messages in real-time before broadcasting
  */
 
-const express = require('express');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
-const ProfanityFilter = require('./profanity-filter');
-const blocklist = require('./blocklist');
+import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { ProfanityFilter } from './profanity-filter.js';
+import { blocklist } from './blocklist.js';
+import type { FilterResult } from './types.js';
+
+// ES module equivalents for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Initialize Express and Socket.IO
 const app = express();
@@ -25,14 +31,32 @@ const io = new Server(httpServer, {
 const filter = new ProfanityFilter(blocklist);
 
 // Serve static files (client.html)
-app.use(express.static(__dirname));
+app.use(express.static(join(__dirname, '..')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client.html'));
+app.get('/', (_req, res) => {
+  res.sendFile(join(__dirname, '..', 'client.html'));
 });
 
+// Statistics interface
+interface ViolationLog {
+  timestamp: string;
+  username: string;
+  message: string;
+  severity: string;
+  violations: FilterResult['violations'];
+  sanitized: string | null;
+}
+
+interface Stats {
+  totalMessages: number;
+  blockedMessages: number;
+  sanitizedMessages: number;
+  cleanMessages: number;
+  violations: ViolationLog[];
+}
+
 // Statistics
-const stats = {
+const stats: Stats = {
   totalMessages: 0,
   blockedMessages: 0,
   sanitizedMessages: 0,
@@ -48,7 +72,7 @@ io.on('connection', (socket) => {
   socket.emit('stats', stats);
 
   // Handle incoming messages
-  socket.on('message', (data) => {
+  socket.on('message', (data: { username: string; message: string }) => {
     const { username, message } = data;
     stats.totalMessages++;
 
@@ -114,7 +138,7 @@ io.on('connection', (socket) => {
   });
 
   // Handle typing indicator
-  socket.on('typing', (data) => {
+  socket.on('typing', (data: { username: string }) => {
     socket.broadcast.emit('typing', data);
   });
 
@@ -127,8 +151,8 @@ io.on('connection', (socket) => {
 /**
  * Log violation to stats and console
  */
-function logViolation(username, message, filterResult) {
-  const violation = {
+function logViolation(username: string, message: string, filterResult: FilterResult): void {
+  const violation: ViolationLog = {
     timestamp: new Date().toISOString(),
     username,
     message,
@@ -154,18 +178,18 @@ function logViolation(username, message, filterResult) {
 }
 
 // API endpoint for stats
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', (_req, res) => {
   res.json(stats);
 });
 
 // API endpoint for violations
-app.get('/api/violations', (req, res) => {
+app.get('/api/violations', (_req, res) => {
   res.json(stats.violations);
 });
 
 // API endpoint to test filter
 app.get('/api/test', (req, res) => {
-  const message = req.query.message || '';
+  const message = (req.query.message as string) || '';
   const result = filter.analyze(message);
   res.json(result);
 });

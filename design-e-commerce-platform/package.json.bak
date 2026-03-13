@@ -1,14 +1,18 @@
 {
-  "name": "design-rate-limiter",
+  "name": "design-e-commerce-platform",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
+    "init-db": "node database/init.js",
+    "seed-db": "node database/seed.js",
+    "generate-diagrams": "node generate-diagrams.js",
+    "demo": "node demo.js",
+    "test-replication": "node test-replication-lag.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:performance": "node tests/performance.js",
-    "seed": "node database/seed.js"
+    "test:ui": "vitest --ui"
   },
   "keywords": [],
   "author": "",
@@ -18,12 +22,11 @@
     "@faker-js/faker": "^10.3.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "ioredis": "^5.10.0",
-    "redis": "^5.11.0"
+    "mysql2": "^3.19.1",
+    "node-cache": "^5.1.2"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
-    "@types/express": "^5.0.6",
+    "@mermaid-js/mermaid-cli": "^11.12.0",
     "@vitest/ui": "^4.1.0",
     "supertest": "^7.2.2",
     "vitest": "^4.1.0"

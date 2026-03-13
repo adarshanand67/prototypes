@@ -2,10 +2,13 @@
   "name": "design-profanity-filter",
   "version": "1.0.0",
   "description": "Real-time profanity filter system with Socket.IO",
-  "main": "server.js",
+  "type": "module",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "node test-filter.js"
+    "build": "tsc",
+    "start": "npm run build && node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "npm run build && node dist/test-filter.js"
   },
   "keywords": ["profanity", "filter", "socket.io", "realtime"],
   "author": "Adarsh Anand",
@@ -13,5 +16,11 @@
   "dependencies": {
     "socket.io": "^4.6.1",
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

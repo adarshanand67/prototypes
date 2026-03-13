@@ -7,7 +7,9 @@
  * - 'block': Completely block the message
  */
 
-const blocklist = {
+import type { Blocklist } from './types.js';
+
+export const blocklist: Blocklist = {
   // Severity levels determine action taken
   words: {
     // Sexual content - block
@@ -71,10 +73,6 @@ const blocklist = {
     'a55': 'sanitize',
     'dck': 'block',
     'dik': 'block',
-
-    // Scunthorpe problem examples (be careful with partial matching)
-    // These are legitimate words that contain profanity
-    // We avoid them in partial matching to prevent false positives
   },
 
   // Common legitimate words that contain profanity substrings
@@ -131,5 +129,3 @@ const blocklist = {
     logViolations: true
   }
 };
-
-module.exports = blocklist;

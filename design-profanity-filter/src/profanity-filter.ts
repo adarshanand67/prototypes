@@ -4,8 +4,22 @@
  * Multi-strategy detection system for identifying and filtering profanity
  */
 
-class ProfanityFilter {
-  constructor(blocklist) {
+import type {
+  Blocklist,
+  FilterResult,
+  Violation,
+  AnalysisResult,
+  LeetspeakMap,
+  HomoglyphMap,
+  SeverityLevel
+} from './types.js';
+
+export class ProfanityFilter {
+  private readonly blocklist: Blocklist;
+  private readonly leetspeakMap: LeetspeakMap;
+  private readonly homoglyphs: HomoglyphMap;
+
+  constructor(blocklist: Blocklist) {
     this.blocklist = blocklist;
 
     // Leetspeak character mappings
@@ -16,12 +30,12 @@ class ProfanityFilter {
       '|)': 'd',
       '3': 'e', '€': 'e',
       '|=': 'f', 'ph': 'f',
-      '9': 'g', '6': 'g',
+      '9': 'g',
       '#': 'h', '|-|': 'h',
-      '1': 'i', '!': 'i', '|': 'i',
+      '!': 'i', '|': 'i',
       '_|': 'j',
       '|<': 'k', '|{': 'k',
-      '1': 'l', '|_': 'l',
+      '|_': 'l',
       '|v|': 'm', '/\\/\\': 'm',
       '|\\|': 'n',
       '0': 'o', '()': 'o',
@@ -53,8 +67,8 @@ class ProfanityFilter {
   /**
    * Main filter method - checks message through all strategies
    */
-  filter(message) {
-    const result = {
+  filter(message: string): FilterResult {
+    const result: FilterResult = {
       clean: true,
       blocked: false,
       sanitized: message,
@@ -76,12 +90,12 @@ class ProfanityFilter {
     ];
 
     // Aggregate violations
-    detections.forEach(detection => {
+    for (const detection of detections) {
       if (detection.violations.length > 0) {
         result.clean = false;
         result.violations.push(...detection.violations);
       }
-    });
+    }
 
     // Determine severity and action
     if (result.violations.length > 0) {
@@ -101,12 +115,12 @@ class ProfanityFilter {
   /**
    * Strategy 1: Exact word matching
    */
-  detectExactMatch(message) {
-    const violations = [];
+  private detectExactMatch(message: string): { violations: Violation[] } {
+    const violations: Violation[] = [];
     const normalized = message.toLowerCase();
     const words = normalized.split(/\s+/);
 
-    words.forEach(word => {
+    for (const word of words) {
       // Remove punctuation from word boundaries
       const cleanWord = word.replace(/^[^\w]+|[^\w]+$/g, '');
 
@@ -119,7 +133,7 @@ class ProfanityFilter {
           position: message.toLowerCase().indexOf(word)
         });
       }
-    });
+    }
 
     return { violations };
   }
@@ -128,8 +142,8 @@ class ProfanityFilter {
    * Strategy 2: Leetspeak detection
    * Converts leetspeak characters back to normal letters
    */
-  detectLeetspeak(message) {
-    const violations = [];
+  private detectLeetspeak(message: string): { violations: Violation[] } {
+    const violations: Violation[] = [];
     let decoded = message.toLowerCase();
 
     // Apply leetspeak conversion (handle '1' as both 'i' and 'l')
@@ -150,7 +164,7 @@ class ProfanityFilter {
     const decoded1AsL = decoded.replace(/1/g, 'l');
 
     // Check both versions
-    const checkDecoded = (decodedText, originalMsg) => {
+    const checkDecoded = (decodedText: string, originalMsg: string): void => {
       const words = decodedText.split(/\s+/);
       words.forEach((word, idx) => {
         const cleanWord = word.replace(/^[^\w]+|[^\w]+$/g, '');
@@ -171,7 +185,7 @@ class ProfanityFilter {
     checkDecoded(decoded1AsL, message);
 
     // Remove duplicates
-    const seen = new Set();
+    const seen = new Set<string>();
     const uniqueViolations = violations.filter(v => {
       const key = `${v.word}-${v.original}`;
       if (seen.has(key)) return false;
@@ -186,8 +200,8 @@ class ProfanityFilter {
    * Strategy 3: Obfuscation detection
    * Detects words with inserted spaces, symbols, or repeated characters
    */
-  detectObfuscation(message) {
-    const violations = [];
+  private detectObfuscation(message: string): { violations: Violation[] } {
+    const violations: Violation[] = [];
     const messageLower = message.toLowerCase();
 
     // Split into words and check each word individually
@@ -207,7 +221,7 @@ class ProfanityFilter {
       }
 
       // Try multiple strategies
-      const strategies = [];
+      const strategies: string[] = [];
 
       // Strategy 1: Remove all non-alphanumeric, collapse to 1 char
       strategies.push(word
@@ -264,8 +278,8 @@ class ProfanityFilter {
    * Strategy 4: Unicode/homoglyph detection
    * Detects lookalike Unicode characters
    */
-  detectUnicode(message) {
-    const violations = [];
+  private detectUnicode(message: string): { violations: Violation[] } {
+    const violations: Violation[] = [];
     let normalized = message.toLowerCase();
 
     // Replace homoglyphs with ASCII equivalents
@@ -296,8 +310,8 @@ class ProfanityFilter {
    * Strategy 5: Partial matching
    * Catches profanity embedded in longer words
    */
-  detectPartialMatch(message) {
-    const violations = [];
+  private detectPartialMatch(message: string): { violations: Violation[] } {
+    const violations: Violation[] = [];
     const normalized = message.toLowerCase().replace(/[^a-z]/g, '');
 
     // Check if the entire message is a whitelisted word
@@ -333,7 +347,7 @@ class ProfanityFilter {
    * Check if profanity appears at word start (potential false positive)
    * E.g., "hell" at start of "hello" should not be flagged
    */
-  isAtWordStart(text, profanity, position) {
+  private isAtWordStart(text: string, profanity: string, position: number): boolean {
     // If profanity is at position 0 and text is longer, it's likely a word prefix
     if (position === 0 && text.length > profanity.length) {
       // Common prefixes to ignore
@@ -352,9 +366,9 @@ class ProfanityFilter {
   /**
    * Get the highest severity level from violations
    */
-  getHighestSeverity(violations) {
-    const severityLevels = { 'warn': 1, 'sanitize': 2, 'block': 3 };
-    let highest = 'warn';
+  private getHighestSeverity(violations: Violation[]): SeverityLevel {
+    const severityLevels: Record<SeverityLevel, number> = { 'warn': 1, 'sanitize': 2, 'block': 3 };
+    let highest: SeverityLevel = 'warn';
 
     violations.forEach(v => {
       if (severityLevels[v.severity] > severityLevels[highest]) {
@@ -368,7 +382,7 @@ class ProfanityFilter {
   /**
    * Sanitize message by replacing profanity with asterisks
    */
-  sanitizeMessage(message, violations) {
+  private sanitizeMessage(message: string, violations: Violation[]): string {
     let sanitized = message;
 
     // Replace each violation with asterisks
@@ -385,14 +399,14 @@ class ProfanityFilter {
   /**
    * Check if message is clean (no profanity)
    */
-  isClean(message) {
+  isClean(message: string): boolean {
     return this.filter(message).clean;
   }
 
   /**
    * Get detailed analysis of a message
    */
-  analyze(message) {
+  analyze(message: string): AnalysisResult {
     const result = this.filter(message);
     return {
       original: message,
@@ -405,5 +419,3 @@ class ProfanityFilter {
     };
   }
 }
-
-module.exports = ProfanityFilter;
