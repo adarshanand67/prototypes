@@ -2,19 +2,20 @@
   "name": "mysql_disaster_recovery",
   "version": "1.0.0",
   "description": "",
-  "main": "simulate.js",
+  "main": "simulate.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "simulate": "npx tsx simulate.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
     "mysql2": "^3.18.2"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
-    "@types/express": "^5.0.6"
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

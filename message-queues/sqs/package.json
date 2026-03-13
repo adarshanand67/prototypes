@@ -5,12 +5,17 @@
     "type": "module",
     "scripts": {
         "start-local": "localstack start -d",
-        "setup": "node setup-queue.js",
-        "publish": "node publisher.js",
-        "subscribe": "node subscriber.js"
+        "setup": "npx tsx setup-queue.ts",
+        "publish": "npx tsx publisher.ts",
+        "subscribe": "npx tsx subscriber.ts"
     },
     "dependencies": {
         "@aws-sdk/client-sqs": "^3.741.0",
         "chalk": "^5.4.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
     }
 }

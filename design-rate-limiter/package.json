@@ -2,13 +2,12 @@
   "name": "design-rate-limiter",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "npx tsx server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:performance": "node tests/performance.js",
-    "seed": "node database/seed.js"
+    "test:performance": "npx tsx performance/benchmark.ts",
+    "seed": "npx tsx database/seed.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,10 +21,13 @@
     "redis": "^5.11.0"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
     "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/supertest": "^6.0.2",
     "@vitest/ui": "^4.1.0",
     "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
     "vitest": "^4.1.0"
   }
 }

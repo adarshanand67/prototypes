@@ -2,9 +2,12 @@
   "name": "redis-pubsub",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "publish": "npx tsx publisher.ts",
+    "consume1": "npx tsx consumer1.ts",
+    "consume2": "npx tsx consumer2.ts",
+    "consume3": "npx tsx consumer3.ts",
+    "late": "npx tsx late_subscriber.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,7 +17,8 @@
     "ioredis": "^5.10.0"
   },
   "devDependencies": {
-    "@types/axios": "^0.9.36",
-    "@types/express": "^5.0.6"
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

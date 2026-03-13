@@ -4,11 +4,16 @@
     "description": "Apache Kafka producer/consumer proof-of-concept",
     "type": "module",
     "scripts": {
-        "produce": "node producer.js",
-        "consume": "node consumer.js"
+        "produce": "npx tsx producer.ts",
+        "consume": "npx tsx consumer.ts"
     },
     "dependencies": {
         "kafkajs": "^2.2.4",
         "chalk": "^5.4.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
     }
 }

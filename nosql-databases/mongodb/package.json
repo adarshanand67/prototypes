@@ -1,0 +1,17 @@
+{
+    "name": "mongodb-seed",
+    "version": "1.0.0",
+    "description": "MongoDB seed script for social network database",
+    "type": "module",
+    "scripts": {
+        "seed": "npx tsx seed.ts"
+    },
+    "dependencies": {
+        "mongodb": "^6.12.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3"
+    }
+}

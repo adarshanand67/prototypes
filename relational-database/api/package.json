@@ -2,9 +2,9 @@
   "name": "api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npx tsx server.ts",
+    "test": "npx tsx test_scaling.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,5 +14,12 @@
     "axios": "^1.13.6",
     "express": "^5.2.1",
     "pg": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
