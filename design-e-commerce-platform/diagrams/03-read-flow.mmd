@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Client
+    participant API as Express API
+    participant Cache
+    participant Replica as MySQL Replica
+
+    rect rgb(240, 248, 255)
+    Note over Client,Replica: First Request - Cache MISS
+
+    Client->>API: GET /api/products/101
+    API->>Cache: Check cache key: /api/products/101
+    Cache-->>API: MISS (not found)
+
+    Note over API: X-Cache: MISS header
+
+    API->>Replica: SELECT * FROM products WHERE id=101
+    Replica-->>API: Product data
+    API->>Cache: Store in cache (300s TTL)
+    API-->>Client: 200 OK<br/>X-Cache: MISS<br/>{product data}
+    end
+
+    rect rgb(240, 255, 240)
+    Note over Client,Replica: Second Request - Cache HIT
+
+    Client->>API: GET /api/products/101
+    API->>Cache: Check cache key: /api/products/101
+    Cache-->>API: HIT (data found)
+
+    Note over API: X-Cache: HIT header<br/>No database query!
+
+    API-->>Client: 200 OK<br/>X-Cache: HIT<br/>{cached data}
+    end

@@ -1,0 +1,18 @@
+graph TB
+    Client[Client/Browser]
+    API[Express API Server<br/>Port 3000]
+    Cache[In-Memory Cache<br/>node-cache<br/>TTL: 5 min]
+    Master[(MySQL Master<br/>Port 3306<br/>WRITES)]
+    Replica[(MySQL Replica<br/>Port 3307<br/>READS)]
+
+    Client -->|HTTP Requests| API
+    API -->|Check Cache| Cache
+    Cache -->|Cache MISS| API
+    API -->|Write Operations<br/>POST/PUT/DELETE| Master
+    API -->|Read Operations<br/>GET| Replica
+    Master -.->|Replication<br/>2000ms delay| Replica
+
+    style Master fill:#ff6b6b
+    style Replica fill:#4ecdc4
+    style Cache fill:#ffe66d
+    style API fill:#95e1d3

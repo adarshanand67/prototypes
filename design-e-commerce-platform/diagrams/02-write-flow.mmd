@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant Client
+    participant API as Express API
+    participant Cache
+    participant Master as MySQL Master
+    participant Replica as MySQL Replica
+
+    Client->>API: POST /api/products<br/>{product data}
+
+    Note over API: Route to Master<br/>for Write Operation
+
+    API->>Master: INSERT INTO products
+    Master-->>API: Success (ID: 101)
+
+    Note over API,Replica: Simulate Replication Lag
+
+    API->>API: setTimeout(2000ms)
+    API-->>Client: 201 Created<br/>{productId: 101, replicationDelay: 2000ms}
+
+    Note over API: Clear Cache<br/>Pattern: /products
+
+    API->>Cache: clearCache('/products')
+    Cache-->>API: Cache cleared
+
+    Note over API,Replica: After 2000ms delay
+
+    API->>Replica: INSERT INTO products
+    Replica-->>API: Replication complete
+
+    Note over Master,Replica: Databases now in sync

@@ -1,0 +1,43 @@
+sequenceDiagram
+    participant Client
+    participant API
+    participant Master as Master DB
+    participant Replica as Replica DB
+
+    rect rgb(255, 240, 240)
+    Note over Client,Replica: T=0s: Create Product
+    Client->>API: POST /api/products<br/>{name: "iPhone"}
+    API->>Master: INSERT (id=101)
+    Master-->>API: Success
+    API-->>Client: Created (id=101)
+    end
+
+    rect rgb(255, 255, 230)
+    Note over Client,Replica: T=0.5s: Read from Replica (TOO EARLY!)
+    Client->>API: GET /api/products/101
+    API->>Replica: SELECT WHERE id=101
+    Replica-->>API: NOT FOUND ❌
+    API-->>Client: 404 Not Found
+    end
+
+    rect rgb(240, 255, 240)
+    Note over Client,Replica: T=0.5s: Read from Master (SUCCESS!)
+    Client->>API: GET /api/products/101/from-master
+    API->>Master: SELECT WHERE id=101
+    Master-->>API: Product found ✅
+    API-->>Client: 200 OK {product data}
+    end
+
+    rect rgb(240, 240, 255)
+    Note over Master,Replica: T=2s: Replication Completes
+    Master->>Replica: Replicate INSERT (id=101)
+    Note over Replica: Product now available
+    end
+
+    rect rgb(240, 255, 240)
+    Note over Client,Replica: T=3s: Read from Replica (SUCCESS!)
+    Client->>API: GET /api/products/101
+    API->>Replica: SELECT WHERE id=101
+    Replica-->>API: Product found ✅
+    API-->>Client: 200 OK {product data}
+    end

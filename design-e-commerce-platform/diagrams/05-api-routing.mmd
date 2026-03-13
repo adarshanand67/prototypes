@@ -1,0 +1,28 @@
+flowchart TD
+    Start([Client Request]) --> Method{Request<br/>Method?}
+
+    Method -->|GET| CheckCache[Check Cache]
+    Method -->|POST/PUT/DELETE| Master[Route to<br/>Master DB]
+
+    CheckCache --> CacheHit{Cache<br/>Hit?}
+    CacheHit -->|Yes| ReturnCached[Return Cached Data<br/>X-Cache: HIT]
+    CacheHit -->|No| Replica[Query Replica DB<br/>X-Cache: MISS]
+
+    Replica --> StoreCache[Store in Cache<br/>TTL: 300s]
+    StoreCache --> ReturnData[Return Data]
+
+    Master --> WriteDB[Execute Write<br/>on Master]
+    WriteDB --> QueueReplication[Queue Replication<br/>2000ms delay]
+    QueueReplication --> ClearCache[Clear Cache<br/>Pattern: /products]
+    ClearCache --> ReturnSuccess[Return Success Response]
+
+    QueueReplication -.->|After delay| ReplicateData[Write to<br/>Replica DB]
+
+    ReturnCached --> End([Response])
+    ReturnData --> End
+    ReturnSuccess --> End
+
+    style Master fill:#ff6b6b
+    style Replica fill:#4ecdc4
+    style CheckCache fill:#ffe66d
+    style ClearCache fill:#ff9999
